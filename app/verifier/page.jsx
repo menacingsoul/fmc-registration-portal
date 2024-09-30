@@ -1,14 +1,14 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { CheckCircle } from 'lucide-react'
 
 export default function VerifierDashboard() {
   const [entryPin, setEntryPin] = useState('')
-  const [verifierPin, setVerifierPin] = useState('')
+  const [isVerifierAuthenticated, setIsVerifierAuthenticated] = useState(false)
+  const [userPin, setUserPin] = useState('')
   const [verificationResult, setVerificationResult] = useState(null)
   const [error, setError] = useState('')
-  const router = useRouter()
 
   const handleEntrySubmit = async (e) => {
     e.preventDefault()
@@ -22,7 +22,7 @@ export default function VerifierDashboard() {
       })
 
       if (response.ok) {
-        setVerifierPin(entryPin)
+        setIsVerifierAuthenticated(true)
         setEntryPin('')
       } else {
         setError('Invalid entry PIN')
@@ -41,7 +41,7 @@ export default function VerifierDashboard() {
       const response = await fetch('/api/verify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ pin: verifierPin }),
+        body: JSON.stringify({ pin: userPin }),
       })
 
       const data = await response.json()
@@ -61,7 +61,7 @@ export default function VerifierDashboard() {
       const response = await fetch('/api/confirm-verification', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ pin: verifierPin }),
+        body: JSON.stringify({ pin: userPin }),
       })
 
       if (response.ok) {
@@ -74,11 +74,17 @@ export default function VerifierDashboard() {
     }
   }
 
+  const handleVerifyAnother = () => {
+    setUserPin('')
+    setVerificationResult(null)
+    setError('')
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
       <div className="bg-white p-8 rounded-lg shadow-md w-96">
         <h1 className="text-2xl font-bold mb-6 text-center">Verifier Dashboard</h1>
-        {!verifierPin ? (
+        {!isVerifierAuthenticated ? (
           <form onSubmit={handleEntrySubmit} className="space-y-4">
             <div>
               <label htmlFor="entryPin" className="block text-sm font-medium text-gray-700">
@@ -104,16 +110,16 @@ export default function VerifierDashboard() {
           <>
             <form onSubmit={handleVerify} className="space-y-4">
               <div>
-                <label htmlFor="pin" className="block text-sm font-medium text-gray-700">
-                  Enter 8-digit User PIN
+                <label htmlFor="userPin" className="block text-sm font-medium text-gray-700">
+                  Enter 8-digit Numeric User PIN
                 </label>
                 <input
                   type="text"
-                  id="pin"
-                  value={verifierPin}
-                  onChange={(e) => setVerifierPin(e.target.value)}
+                  id="userPin"
+                  value={userPin}
+                  onChange={(e) => setUserPin(e.target.value)}
                   required
-                  pattern="\d{8}" 
+                  pattern="\d{8}"
                   className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
@@ -125,7 +131,6 @@ export default function VerifierDashboard() {
               </button>
             </form>
             {error && <p className="mt-4 text-red-600 text-center">{error}</p>}
-            
             {verificationResult && (
               <div className="mt-4 p-4 bg-green-100 rounded-md">
                 <h2 className="text-lg font-semibold mb-2">Verification Result:</h2>
@@ -133,7 +138,17 @@ export default function VerifierDashboard() {
                 <p>Roll No: {verificationResult.rollNo}</p>
                 <p>Branch: {verificationResult.branch}</p>
                 <p>Year of Admission: {verificationResult.yearOfAdmission}</p>
-                <p>Verified: {verificationResult.isVerified ? 'Yes' : 'No'}</p>
+                <div className="flex items-center mt-2">
+                  <p className="mr-2">Verified:</p>
+                  {verificationResult.isVerified ? (
+                    <div className="flex items-center text-green-600">
+                      <CheckCircle className="w-5 h-5 mr-1" />
+                      <span>Already Verified</span>
+                    </div>
+                  ) : (
+                    <span>No</span>
+                  )}
+                </div>
                 {!verificationResult.isVerified && (
                   <button
                     onClick={handleConfirmVerification}
@@ -142,13 +157,12 @@ export default function VerifierDashboard() {
                     Confirm Verification
                   </button>
                 )}
-                {verificationResult.isVerified && (
-                  <>
-                  <div className=' bg-red-500 text-white'>
-                    This user is already verified
-                  </div>
-                  </>
-                )}
+                <button
+                  onClick={handleVerifyAnother}
+                  className="mt-4 w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                >
+                  Verify Another
+                </button>
               </div>
             )}
           </>

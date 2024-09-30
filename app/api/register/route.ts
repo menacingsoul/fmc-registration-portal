@@ -7,18 +7,24 @@ export async function POST(req: Request) {
       let { email, rollNo } = await req.json()
   
       // Validate email format
-      const emailRegex = /^[a-zA-Z]+\.[a-zA-Z]+\.[a-z]+\d{2}@(itbhu\.ac\.in|iitbhu\.ac\.in)$/
-      if (!emailRegex.test(email)) {
-        return NextResponse.json({ error: 'Invalid email format' }, { status: 400 })
+      const [namePart, domainPart] = email.split('@');
+      const nameParts = namePart.split('.');
+      let firstName = nameParts[0].toUpperCase();
+      let lastName = nameParts[1].toUpperCase();
+      let branch = '';
+      let year = '';
+      
+      // Check if there is an optional component
+      if (nameParts.length === 4) {
+        // Case: email of type "first.last.cd.branchXX@domain"
+        branch = nameParts[3].slice(0,-2); // Third part (cd) is treated as the branch
+        year = '20' + nameParts[3].slice(-2); // Year is from the fourth part
+      } else if (nameParts.length === 3) {
+        // Case: email of type "first.last.branchXX@domain"
+        branch = nameParts[2].slice(0, -2); // Last part is the branch
+        year = '20' + nameParts[2].slice(-2); // Year is the last two digits
       }
-  
-      // Parse email
-      const [namePart, domainPart] = email.split('@')
-      const [firstName, lastName, branchAndYear] = namePart.split('.')
-      const branch = branchAndYear.slice(0, -2)
-      const year = '20' + branchAndYear.slice(-2)
-
-      email = `${namePart}@iitbhu.ac.in`
+      
 
   
       // Generate unique 8-digit PIN
