@@ -1,9 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { set } from 'mongoose';
 import { Loader } from 'lucide-react';
 
 export default function Home() {
@@ -14,7 +12,7 @@ export default function Home() {
   const [error, setError] = useState('');
   const [pin, setPin] = useState(''); // Store the generated pin after registration
   const[loading, setLoading] = useState(false);
-  const router = useRouter();
+
 
   // Handle sending OTP
   const handleSendOtp = async (e) => {
@@ -166,7 +164,7 @@ export default function Home() {
         )}
 
         {/* Step 3: Registration with Roll Number */}
-        {step === 3 && (
+        {!pin&&step === 3 && (
           <form onSubmit={handleRegister} className="space-y-4">
             <div>
               <label htmlFor="rollNo" className="block text-sm font-medium text-gray-700">
@@ -196,6 +194,7 @@ export default function Home() {
         {/* Display PIN after Registration */}
         {pin && (
           <div className="mt-4 p-4 bg-green-100 rounded-md">
+            <p className="text-green-800 text-center font-bold">Email: {email}</p>
             <p className="text-green-800 text-center font-bold">Your PIN: {pin}</p>
             <p className="text-sm text-green-700 text-center mt-2">
               Please screenshot this PIN for verification.
