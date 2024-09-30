@@ -6,7 +6,10 @@ import User from '../../../models/User';
 
 export async function POST(request: Request) {
   const { email } = await request.json();
-
+  const userCount = await User.countDocuments();
+    if (userCount >= 1975) {
+      return NextResponse.json({ error: 'Event Full. No more registrations are allowed.' }, { status: 400 });
+    }
   if (!email) {
     return NextResponse.json({ error: 'Email is required' }, { status: 400 });
   }
@@ -26,7 +29,7 @@ export async function POST(request: Request) {
     }
     const existingOtp = await Otp.findOne({ email });
     if (existingOtp) {
-      return NextResponse.json({ error: 'OTP already sent. Please check your email.' }, { status: 400 });
+      await existingOtp.deleteOne();
     }
 
     // Generate a 6-digit OTP

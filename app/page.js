@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
+import { set } from 'mongoose';
+import { Loader } from 'lucide-react';
 
 export default function Home() {
   const [step, setStep] = useState(1); // Manage the current step in the registration process
@@ -11,12 +13,14 @@ export default function Home() {
   const [otp, setOtp] = useState(''); // State to store the entered OTP
   const [error, setError] = useState('');
   const [pin, setPin] = useState(''); // Store the generated pin after registration
+  const[loading, setLoading] = useState(false);
   const router = useRouter();
 
   // Handle sending OTP
   const handleSendOtp = async (e) => {
     e.preventDefault();
     setError('');
+    setLoading(true);
     try {
       const response = await fetch('/api/send-otp', {
         method: 'POST',
@@ -25,13 +29,18 @@ export default function Home() {
       });
 
       const data = await response.json();
+  
 
       if (response.ok) {
-        setStep(2); // Move to the next step (OTP Verification)
+        setStep(2);
+        setLoading(false);
+         // Move to the next step (OTP Verification)
       } else {
+        setLoading(false);
         setError(data.error || 'An error occurred');
       }
     } catch (error) {
+      setLoading(false);
       setError('An error occurred while sending the OTP');
     }
   };
@@ -40,6 +49,7 @@ export default function Home() {
   const handleVerifyOtp = async (e) => {
     e.preventDefault();
     setError('');
+    setLoading(true);
 
     try {
       const response = await fetch('/api/verify-otp', {
@@ -51,11 +61,14 @@ export default function Home() {
       const data = await response.json();
 
       if (response.ok) {
+        setLoading(false);
         setStep(3); // Move to the final registration step
       } else {
+        setLoading(false);
         setError(data.error || 'Invalid OTP. Please try again.');
       }
     } catch (error) {
+      setLoading(false);
       setError('An error occurred during OTP verification');
     }
   };
@@ -65,6 +78,7 @@ export default function Home() {
     e.preventDefault();
     setError('');
     setPin('');
+    setLoading(true);
 
     try {
       const response = await fetch('/api/register', {
@@ -76,14 +90,21 @@ export default function Home() {
       const data = await response.json();
 
       if (response.ok) {
+        setLoading(false);
         setPin(data.pin);
       } else {
+        setLoading(false);
         setError(data.error || 'An error occurred');
       }
     } catch (error) {
+      setLoading(false);
       setError('An error occurred during registration');
     }
   };
+
+  if(loading){
+    return <div className="min-h-screen flex items-center justify-center animate-spin"><Loader size={28}/></div>
+  }
 
   return (
     <div className="min-h-screen relative flex items-center justify-center">
