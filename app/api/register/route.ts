@@ -91,11 +91,6 @@ export async function POST(req: Request) {
   try {
     const { email, rollNo }: UserInfo = await req.json();
 
-    // Ensure email is from the correct domain
-    if (!email.endsWith('@iitbhu.ac.in')) {
-      return NextResponse.json({ error: 'Invalid email domain. Use your IIT BHU email.' }, { status: 400 });
-    }
-
     // Parse email to extract user details
     const { firstName, lastName, branch, year } = parseIITBHUEmail(email);
 
