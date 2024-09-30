@@ -128,7 +128,7 @@ export async function POST(req: Request) {
     // Send the email
     await sendVerificationEmail(email, pin);
 
-    return NextResponse.json({ message: 'Registration successful, PIN sent to email.' });
+    return NextResponse.json({pin, message: 'Registration successful, PIN sent to email.' });
   } catch (error) {
     console.error('Registration error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
