@@ -81,7 +81,7 @@ export default function VerifierDashboard() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
+    <div className="min-h-screen flex items-center justify-center">
       <div className="bg-white p-8 rounded-lg shadow-md w-96">
         <h1 className="text-2xl font-bold mb-6 text-center">Verifier Dashboard</h1>
         {!isVerifierAuthenticated ? (
@@ -114,7 +114,7 @@ export default function VerifierDashboard() {
                   Enter 8-digit Numeric User PIN
                 </label>
                 <input
-                  type="text"
+                  type='number'
                   id="userPin"
                   value={userPin}
                   onChange={(e) => setUserPin(e.target.value)}
