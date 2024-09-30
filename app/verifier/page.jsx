@@ -3,16 +3,24 @@
 import { useState } from 'react'
 import { CheckCircle } from 'lucide-react'
 
+// Basic Spinner component
+const Spinner = () => (
+  <div className="w-5 h-5 border-4 border-blue-400 border-solid border-t-transparent rounded-full animate-spin"></div>
+)
+
 export default function VerifierDashboard() {
   const [entryPin, setEntryPin] = useState('')
   const [isVerifierAuthenticated, setIsVerifierAuthenticated] = useState(false)
   const [userPin, setUserPin] = useState('')
   const [verificationResult, setVerificationResult] = useState(null)
   const [error, setError] = useState('')
+  const [isLoading, setIsLoading] = useState(false) // Loading state for general API calls
+  const [isConfirming, setIsConfirming] = useState(false) // Loading state for confirmation button
 
   const handleEntrySubmit = async (e) => {
     e.preventDefault()
     setError('')
+    setIsLoading(true) // Start loading
 
     try {
       const response = await fetch('/api/verifier-entry', {
@@ -29,6 +37,8 @@ export default function VerifierDashboard() {
       }
     } catch (error) {
       setError('An error occurred')
+    } finally {
+      setIsLoading(false) // Stop loading
     }
   }
 
@@ -36,6 +46,7 @@ export default function VerifierDashboard() {
     e.preventDefault()
     setError('')
     setVerificationResult(null)
+    setIsLoading(true) // Start loading
 
     try {
       const response = await fetch('/api/verify', {
@@ -53,10 +64,15 @@ export default function VerifierDashboard() {
       }
     } catch (error) {
       setError('An error occurred')
+    } finally {
+      setIsLoading(false) // Stop loading
     }
   }
 
   const handleConfirmVerification = async () => {
+    setIsConfirming(true) // Start loading for confirm button
+    setError('')
+
     try {
       const response = await fetch('/api/confirm-verification', {
         method: 'POST',
@@ -71,6 +87,8 @@ export default function VerifierDashboard() {
       }
     } catch (error) {
       setError('An error occurred')
+    } finally {
+      setIsConfirming(false) // Stop loading for confirm button
     }
   }
 
@@ -103,7 +121,7 @@ export default function VerifierDashboard() {
               type="submit"
               className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
             >
-              Enter Verifier Dashboard
+              {isLoading ? <Spinner /> : 'Enter Verifier Dashboard'}
             </button>
           </form>
         ) : (
@@ -114,12 +132,11 @@ export default function VerifierDashboard() {
                   Enter 8-digit Numeric User PIN
                 </label>
                 <input
-                  type='number'
+                  type="number"
                   id="userPin"
                   value={userPin}
                   onChange={(e) => setUserPin(e.target.value)}
                   required
-                  pattern="\d{8}"
                   className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
@@ -127,7 +144,7 @@ export default function VerifierDashboard() {
                 type="submit"
                 className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
               >
-                Verify
+                {isLoading ? <Spinner /> : 'Verify'}
               </button>
             </form>
             {error && <p className="mt-4 text-red-600 text-center">{error}</p>}
@@ -154,7 +171,7 @@ export default function VerifierDashboard() {
                     onClick={handleConfirmVerification}
                     className="mt-4 w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
                   >
-                    Confirm Verification
+                    {isConfirming ? <Spinner /> : 'Confirm Verification'}
                   </button>
                 )}
                 <button

@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import { connectToDatabase } from '../../../lib/mongodb';
 import Otp from '../../../models/Otp';
-import User from '../../../models/User';
 
 export async function POST(request: Request) {
   // Parse the incoming request body
@@ -25,11 +24,8 @@ export async function POST(request: Request) {
     }
 
     // Check if the OTP matches and is not expired
-    console.log(otpRecord.otp);
-    console.log(otp);
+ 
     const isOtpValid = otpRecord.otp.toString() === otp.toString();
-
-    console.log(isOtpValid);
 
     if (!isOtpValid) {
       return NextResponse.json({ error: 'Invalid or expired OTP. Please request a new one.' }, { status: 400 });
