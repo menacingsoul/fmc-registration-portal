@@ -51,31 +51,38 @@ const sendVerificationEmail = async (email: string, pin: string) => {
   const mailOptions = {
     from: process.env.EMAIL_USER,
     to: email,
-    subject: 'Your PIN for Garba Night Verification',
+    subject: 'Your PIN for Garba Night Celebration',
     html: `
       <!DOCTYPE html>
       <html lang="en">
       <head>
           <meta charset="UTF-8">
           <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <title>Email Verification</title>
+          <title>Garba Night Verification</title>
           <style>
-              body { font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 20px; }
+              body { font-family: 'Arial', sans-serif; background-color: #FFF5E6; color: #333; padding: 20px; }
               .container { background-color: #ffffff; border-radius: 8px; padding: 20px; max-width: 600px; margin: auto; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); }
               .header { text-align: center; margin-bottom: 20px; }
-              .otp { font-size: 28px; font-weight: bold; color: #e91e63; padding: 15px; background-color: #ffe0e0; border-radius: 8px; display: inline-block; }
-              .footer { text-align: center; color: #888888; font-size: 12px; margin-top: 30px; }
-              h1 { color: #333333; }
-              p { color: #555555; line-height: 1.5; }
+              .header img { max-width: 100%; height: auto; border-radius: 8px; }
+              .otp { text-align: center; font-size: 32px; font-weight: bold; color: #FF6B6B; padding: 15px; background-color: #FFF0F0; border-radius: 8px; display: inline-block; letter-spacing: 3px; }
+              .footer { text-align: center; color: #888; font-size: 12px; margin-top: 30px; }
+              h1 { color: #FF6B6B; }
+              p { line-height: 1.6; }
+              .warning { color: #FF6B6B; font-weight: bold; font-size: 18px; }
           </style>
       </head>
       <body>
           <div class="container">
-              <div class="header"><h1>Verification PIN</h1></div>
+              <div class="header">
+                  <img src="https://curlytales.com/wp-content/uploads/2023/10/NAVRATRI-2.jpg" alt="Navratri Celebration">
+                  <h1>Garba Night Verification</h1>
+              </div>
               <p>Dear ${email},</p>
-              <p>Your USER PIN for Garba Night Verification is:</p>
+              <p>Get ready to dance the night away! Here's your special PIN for the Garba Night Celebration:</p>
               <div class="otp">${pin}</div>
-              <p>Kindly show this PIN at the venue for verification.</p>
+              <p>Please show this PIN at the venue entrance for quick and easy verification.</p>
+              <p class="warning">Note: This PIN is unique to you and for one-time use only. Please do not share it with anyone.</p>
+              <p>We can't wait to see you there! Prepare for an unforgettable night of music, dance, and festive spirit!</p>
               <div class="footer"><p>Film and Media Council</p></div>
           </div>
       </body>
