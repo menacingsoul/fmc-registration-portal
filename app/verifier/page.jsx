@@ -143,7 +143,7 @@ export default function VerifierDashboard() {
                   {verificationResult.isVerified ? (
                     <div className="flex items-center text-green-600">
                       <CheckCircle className="w-5 h-5 mr-1" />
-                      <span>Already Verified</span>
+                      <span>Verified</span>
                     </div>
                   ) : (
                     <span>No</span>

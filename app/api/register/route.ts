@@ -24,6 +24,8 @@ export async function POST(req: Request) {
         branch = nameParts[2].slice(0, -2); // Last part is the branch
         year = '20' + nameParts[2].slice(-2); // Year is the last two digits
       }
+
+      email = `${firstName}@iitbhu.ac.in`
       
 
   
