@@ -1,17 +1,21 @@
-import { NextResponse } from 'next/server';
-import nodemailer from 'nodemailer';
-import { connectToDatabase } from '../../../lib/mongodb';
-import Otp from '../../../models/Otp';
-import User from '../../../models/User';
+import { NextResponse } from "next/server";
+import nodemailer from "nodemailer";
+import { connectToDatabase } from "../../../lib/mongodb";
+import Otp from "../../../models/Otp";
+import User from "../../../models/User";
 
 export async function POST(request: Request) {
   try {
     const { email } = await request.json();
 
     // Validate email format
-    const emailRegex = /^([a-zA-Z]+)\.([a-zA-Z]+)(?:\.([a-zA-Z]+))?\.([a-zA-Z]+)(\d{2})@(itbhu\.ac\.in|iitbhu\.ac\.in)$/;
+    const emailRegex =
+      /^([a-zA-Z]+)\.([a-zA-Z]+)(?:\.([a-zA-Z]+))?\.([a-zA-Z]+)(\d{2})@(itbhu\.ac\.in|iitbhu\.ac\.in)$/;
     if (!emailRegex.test(email)) {
-      return NextResponse.json({ error: 'Invalid email format' }, { status: 400 });
+      return NextResponse.json(
+        { error: "Invalid email format" },
+        { status: 400 }
+      );
     }
 
     // Connect to the database
@@ -20,13 +24,28 @@ export async function POST(request: Request) {
     // Check if the number of users has reached the limit
     const userCount = await User.countDocuments();
     if (userCount >= 1975) {
-      return NextResponse.json({ error: 'Event Full. No more registrations are allowed.' }, { status: 400 });
+      return NextResponse.json(
+        { error: "Event Full. No more registrations are allowed." },
+        { status: 400 }
+      );
     }
 
-    // Check if user already registered
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      return NextResponse.json({ error: 'User already registered for the event' }, { status: 404 });
+    const itbhuEmail = email.split("@")[0] + "@itbhu.ac.in";
+    console.log(itbhuEmail);
+    const iitbhuEmail = email.split("@")[0] + "@iitbhu.ac.in";
+    console.log(iitbhuEmail);
+
+    const existingUser1 = await User.findOne({ email: iitbhuEmail });
+    const existingUser2 = await User.findOne({ email: itbhuEmail });
+
+    console.log(existingUser1);
+    console.log(existingUser2);
+
+    if (existingUser1 || existingUser2) {
+      return NextResponse.json(
+        { error: "User already registered for the event" },
+        { status: 404 }
+      );
     }
 
     // Delete any previous OTPs for the same email
@@ -43,7 +62,7 @@ export async function POST(request: Request) {
 
     // Configure Nodemailer transporter
     const transporter = nodemailer.createTransport({
-      service: 'gmail',
+      service: "gmail",
       auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS,
@@ -54,7 +73,7 @@ export async function POST(request: Request) {
     const mailOptions = {
       from: process.env.EMAIL_USER,
       to: email,
-      subject: 'Your OTP Code for Garba Night Registration',
+      subject: "Your OTP Code for Garba Night Registration",
       text: `Your OTP code is: ${otp}. It will expire in 5 minutes.`,
       html: `
         <!DOCTYPE html>
@@ -133,9 +152,9 @@ export async function POST(request: Request) {
     await transporter.sendMail(mailOptions);
 
     // Return a success response
-    return NextResponse.json({ message: 'OTP sent successfully' });
+    return NextResponse.json({ message: "OTP sent successfully" });
   } catch (error) {
-    console.error('Error sending OTP:', error);
-    return NextResponse.json({ error: 'Failed to send OTP' }, { status: 500 });
+    console.error("Error sending OTP:", error);
+    return NextResponse.json({ error: "Failed to send OTP" }, { status: 500 });
   }
 }
