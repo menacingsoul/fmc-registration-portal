@@ -197,7 +197,7 @@ export default function Home() {
             <p className="text-green-800 text-center font-bold">Email: {email}</p>
             <p className="text-green-800 text-center font-bold">Your PIN: {pin}</p>
             <p className="text-sm text-green-700 text-center mt-2">
-              You can screenshot this PIN for verification.
+            This PIN is required for verification at the Venue
             </p>
             <p className='text-center text-xs mt-2 font-semibold'>This PIN was also sent to your registered Email.</p>
           </div>
