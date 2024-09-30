@@ -7,7 +7,7 @@ const UserSchema = new mongoose.Schema({
   branch: { type: String, required: true },
   yearOfAdmission: { type: String, required: true },
   rollNo: { type: String, required: true },
-  pin: { type: String, required: true },
+  pin: { type: String, required: true , unique:true },
   isVerified: { type: Boolean, default: false },
 })
 

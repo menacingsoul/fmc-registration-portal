@@ -105,7 +105,7 @@ export default function VerifierDashboard() {
             <form onSubmit={handleVerify} className="space-y-4">
               <div>
                 <label htmlFor="pin" className="block text-sm font-medium text-gray-700">
-                  Enter 6-digit User PIN
+                  Enter 8-digit User PIN
                 </label>
                 <input
                   type="text"
@@ -113,7 +113,7 @@ export default function VerifierDashboard() {
                   value={verifierPin}
                   onChange={(e) => setVerifierPin(e.target.value)}
                   required
-                  pattern="\{10}" 
+                  pattern="\d{8}" 
                   className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
