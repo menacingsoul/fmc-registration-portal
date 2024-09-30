@@ -25,7 +25,7 @@ export async function POST(req: Request) {
         year = '20' + nameParts[2].slice(-2); // Year is the last two digits
       }
 
-      email = `${firstName}@iitbhu.ac.in`
+      email = `${namePart}@iitbhu.ac.in`
       
 
   
