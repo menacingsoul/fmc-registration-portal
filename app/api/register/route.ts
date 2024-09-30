@@ -74,7 +74,7 @@ const sendVerificationEmail = async (email: string, pin: string) => {
       <body>
           <div class="container">
               <div class="header">
-                  <img src="https://curlytales.com/wp-content/uploads/2023/10/NAVRATRI-2.jpg" alt="Navratri Celebration">
+                  <img src="https://i.postimg.cc/hf5cCLzq/CHE-301-Chemical-Technology.png" alt="Navratri Celebration">
                   <h1>Garba Night Verification</h1>
               </div>
               <p>Dear ${email},</p>
