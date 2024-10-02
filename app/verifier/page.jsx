@@ -1,106 +1,135 @@
-'use client'
+'use client';
+import { useState } from 'react';
+import { CheckCircle, X } from 'lucide-react'; 
+import Image from 'next/image';
 
-import { useState } from 'react'
-import { CheckCircle } from 'lucide-react'
-
-// Basic Spinner component
 const Spinner = () => (
   <div className="w-5 h-5 border-4 border-blue-400 border-solid border-t-transparent rounded-full animate-spin"></div>
-)
+);
+
 
 export default function VerifierDashboard() {
-  const [entryPin, setEntryPin] = useState('')
-  const [isVerifierAuthenticated, setIsVerifierAuthenticated] = useState(false)
-  const [userPin, setUserPin] = useState('')
-  const [verificationResult, setVerificationResult] = useState(null)
-  const [error, setError] = useState('')
-  const [isLoading, setIsLoading] = useState(false) // Loading state for general API calls
-  const [isConfirming, setIsConfirming] = useState(false) // Loading state for confirmation button
+  const [entryPin, setEntryPin] = useState('');
+  const [isVerifierAuthenticated, setIsVerifierAuthenticated] = useState(false);
+  const [userPin, setUserPin] = useState('');
+  const [verificationResult, setVerificationResult] = useState(null);
+  const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [isConfirming, setIsConfirming] = useState(false);
+  const [users, setUsers] = useState([]);
+  const [isFetchingUsers, setIsFetchingUsers] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [searchRollNo, setSearchRollNo] = useState('');
 
   const handleEntrySubmit = async (e) => {
-    e.preventDefault()
-    setError('')
-    setIsLoading(true) // Start loading
+    e.preventDefault();
+    setError('');
+    setIsLoading(true); // Start loading
 
     try {
       const response = await fetch('/api/verifier-entry', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ entryPin }),
-      })
+      });
 
       if (response.ok) {
-        setIsVerifierAuthenticated(true)
-        setEntryPin('')
+        setIsVerifierAuthenticated(true);
+        setEntryPin('');
       } else {
-        setError('Invalid entry PIN')
+        setError('Invalid entry PIN');
       }
     } catch (error) {
-      setError('An error occurred')
+      setError('An error occurred');
     } finally {
-      setIsLoading(false) // Stop loading
+      setIsLoading(false); // Stop loading
     }
-  }
+  };
 
   const handleVerify = async (e) => {
-    e.preventDefault()
-    setError('')
-    setVerificationResult(null)
-    setIsLoading(true) // Start loading
+    e.preventDefault();
+    setError('');
+    setVerificationResult(null);
+    setIsLoading(true); // Start loading
 
     try {
       const response = await fetch('/api/verify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ pin: userPin }),
-      })
+      });
 
-      const data = await response.json()
+      const data = await response.json();
 
       if (response.ok) {
-        setVerificationResult(data)
+        setVerificationResult(data);
       } else {
-        setError(data.error || 'Verification failed')
+        setError(data.error || 'Verification failed');
       }
     } catch (error) {
-      setError('An error occurred')
+      setError('An error occurred');
     } finally {
-      setIsLoading(false) // Stop loading
+      setIsLoading(false); // Stop loading
     }
-  }
+  };
 
   const handleConfirmVerification = async () => {
-    setIsConfirming(true) // Start loading for confirm button
-    setError('')
+    setIsConfirming(true); // Start loading for confirm button
+    setError('');
 
     try {
       const response = await fetch('/api/confirm-verification', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ pin: userPin }),
-      })
+      });
 
       if (response.ok) {
-        setVerificationResult((prev) => ({ ...prev, isVerified: true }))
+        setVerificationResult((prev) => ({ ...prev, isVerified: true }));
       } else {
-        setError('Failed to confirm verification')
+        setError('Failed to confirm verification');
       }
     } catch (error) {
-      setError('An error occurred')
+      setError('An error occurred');
     } finally {
-      setIsConfirming(false) // Stop loading for confirm button
+      setIsConfirming(false); // Stop loading for confirm button
     }
-  }
+  };
 
   const handleVerifyAnother = () => {
-    setUserPin('')
-    setVerificationResult(null)
-    setError('')
-  }
+    setUserPin('');
+    setVerificationResult(null);
+    setError('');
+  };
+
+  // Function to fetch all users
+  const fetchAllUsers = async () => {
+    setIsFetchingUsers(true);
+    setError('');
+    try {
+      const response = await fetch('/api/registrations');
+      if (!response.ok) {
+        throw new Error('Failed to fetch users');
+      }
+      const data = await response.json();
+      setUsers(data.users);
+      setIsModalOpen(true); // Open modal after fetching users
+    } catch (err) {
+      setError('An error occurred while fetching users.');
+    } finally {
+      setIsFetchingUsers(false);
+    }
+  };
+
+  // Filter users based on search roll number
+  const filteredUsers = users.filter((user) =>
+    user.rollNo.toLowerCase().includes(searchRollNo.toLowerCase())
+  );
 
   return (
     <div className="min-h-screen flex items-center justify-center">
       <div className="bg-white p-8 rounded-lg shadow-md w-96">
+      <Image src="/logo.png" alt="FMC Logo" width={100} height={100} className="mx-auto" />
         <h1 className="text-2xl font-bold mb-6 text-center">Verifier Dashboard</h1>
         {!isVerifierAuthenticated ? (
           <form onSubmit={handleEntrySubmit} className="space-y-4">
@@ -182,9 +211,58 @@ export default function VerifierDashboard() {
                 </button>
               </div>
             )}
+            <button
+              onClick={fetchAllUsers}
+              className="mt-6 w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+            >
+              {isFetchingUsers ? <Spinner /> : 'Get All Registered Users'}
+            </button>
+
+            {/* Modal for Showing Users */}
+            {isModalOpen && (
+              <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-75 z-50">
+                <div className="bg-white w-4/5 max-w-3xl p-6 rounded-lg shadow-lg relative">
+                  {/* Close Button */}
+                  <button
+                    onClick={() => setIsModalOpen(false)}
+                    className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
+                  >
+                    <X size={24} />
+                  </button>
+
+                  <h2 className="text-xl font-bold mb-4 text-center">Registered Users :{users.length}</h2>
+
+                  {/* Search Field */}
+                  <div className="mb-4">
+                    <input
+                      type="text"
+                      value={searchRollNo}
+                      onChange={(e) => setSearchRollNo(e.target.value)}
+                      placeholder="Search by Roll No."
+                      className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                    />
+                  </div>
+
+                  {/* User List with Scroll */}
+                  <div className="h-64 overflow-y-scroll border rounded-md p-2">
+                    {filteredUsers.length > 0 ? (
+                      filteredUsers.map((user, index) => (
+                        <div key={index} className="p-2 border-b last:border-b-0">
+                          <p>{index + 1}. {user.firstName} {user.lastName}</p>
+                          <p>Roll No: {user.rollNo}</p>
+                          <p>Branch: {user.branch}</p>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-center">No users found.</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
           </>
         )}
       </div>
     </div>
-  )
+  );
 }
