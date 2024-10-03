@@ -5,13 +5,15 @@ import Image from 'next/image';
 import { Loader } from 'lucide-react';
 
 export default function Home() {
-  const [step, setStep] = useState(1); // Manage the current step in the registration process
+  const [step, setStep] = useState(1);
   const [email, setEmail] = useState('');
   const [rollNo, setRollNo] = useState('');
-  const [otp, setOtp] = useState(''); // State to store the entered OTP
+  const [otp, setOtp] = useState('');
   const [error, setError] = useState('');
-  const [pin, setPin] = useState(''); // Store the generated pin after registration
-  const[loading, setLoading] = useState(false);
+  const [pin, setPin] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [qrCodeUrl, setQrCodeUrl] = useState('');
+
 
 
   // Handle sending OTP
@@ -76,6 +78,7 @@ export default function Home() {
     e.preventDefault();
     setError('');
     setPin('');
+    setQrCodeUrl('');
     setLoading(true);
 
     try {
@@ -88,17 +91,21 @@ export default function Home() {
       const data = await response.json();
 
       if (response.ok) {
-        setLoading(false);
         setPin(data.pin);
-      } else {
+        // Generate QR code
+        const qrApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${data.pin}`;
+        setQrCodeUrl(qrApiUrl);
         setLoading(false);
+      } else {
         setError(data.error || 'An error occurred');
+        setLoading(false);
       }
     } catch (error) {
-      setLoading(false);
       setError('An error occurred during registration');
+      setLoading(false);
     }
   };
+
 
   if(loading){
     return <div className="min-h-screen flex items-center justify-center animate-spin"><Loader size={28}/></div>
@@ -164,7 +171,7 @@ export default function Home() {
         )}
 
         {/* Step 3: Registration with Roll Number */}
-        {!pin&&step === 3 && (
+        {!qrCodeUrl && step === 3 && (
           <form onSubmit={handleRegister} className="space-y-4">
             <div>
               <label htmlFor="rollNo" className="block text-sm font-medium text-gray-700">
@@ -191,15 +198,17 @@ export default function Home() {
         {/* Display Error Message */}
         {error && <p className="mt-4 text-red-600 text-center">{error}</p>}
 
-        {/* Display PIN after Registration */}
-        {pin && (
+        {/* Display QR Code after Registration */}
+        {qrCodeUrl && (
           <div className="mt-4 p-4 bg-green-100 rounded-md">
             <p className="text-green-800 text-center font-bold">Email: {email}</p>
-            <p className="text-green-800 text-center font-bold">Your PIN: {pin}</p>
+            <div className="flex justify-center mt-4">
+              <Image src={qrCodeUrl} alt="QR Code" width={200} height={200} />
+            </div>
             <p className="text-sm text-green-700 text-center mt-2">
-            This PIN is required for verification at the Venue
+              This QR code contains your PIN for verification at the Venue
             </p>
-            <p className='text-center text-xs mt-2 font-semibold'>This PIN was also sent to your registered Email.</p>
+            <p className='text-center text-xs mt-2 font-semibold'>A copy of this QR code was also sent to your registered Email.</p>
           </div>
         )}
       </div>

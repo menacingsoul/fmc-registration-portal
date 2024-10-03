@@ -1,31 +1,33 @@
 'use client';
-import { useState } from 'react';
-import { CheckCircle, X } from 'lucide-react'; 
+import { useState, useRef, useEffect } from 'react';
+import { CheckCircle, X, Camera } from 'lucide-react';
 import Image from 'next/image';
+import QrScanner from 'qr-scanner';
 
 const Spinner = () => (
   <div className="w-5 h-5 border-4 border-blue-400 border-solid border-t-transparent rounded-full animate-spin"></div>
 );
 
-
 export default function VerifierDashboard() {
-  const [entryPin, setEntryPin] = useState('');
   const [isVerifierAuthenticated, setIsVerifierAuthenticated] = useState(false);
-  const [userPin, setUserPin] = useState('');
   const [verificationResult, setVerificationResult] = useState(null);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [isConfirming, setIsConfirming] = useState(false);
-  const [users, setUsers] = useState([]);
-  const [isFetchingUsers, setIsFetchingUsers] = useState(false);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [searchRollNo, setSearchRollNo] = useState('');
+  const [isScanning, setIsScanning] = useState(false);
 
-  const handleEntrySubmit = async (e) => {
-    e.preventDefault();
-    setError('');
-    setIsLoading(true); // Start loading
+  const videoRef = useRef(null);
+  const qrScannerRef = useRef(null);
 
+  useEffect(() => {
+    return () => {
+      if (qrScannerRef.current) {
+        qrScannerRef.current.stop();
+      }
+    };
+  }, []);
+
+  const handleVerifierAuthentication = async (entryPin) => {
+    setIsLoading(true);
     try {
       const response = await fetch('/api/verifier-entry', {
         method: 'POST',
@@ -35,28 +37,26 @@ export default function VerifierDashboard() {
 
       if (response.ok) {
         setIsVerifierAuthenticated(true);
-        setEntryPin('');
       } else {
-        setError('Invalid entry PIN');
+        setError('Invalid verifier PIN');
       }
     } catch (error) {
-      setError('An error occurred');
+      setError('An error occurred during authentication');
     } finally {
-      setIsLoading(false); // Stop loading
+      setIsLoading(false);
     }
   };
 
-  const handleVerify = async (e) => {
-    e.preventDefault();
+  const handleVerify = async (pin) => {
+    setIsLoading(true);
     setError('');
     setVerificationResult(null);
-    setIsLoading(true); // Start loading
 
     try {
       const response = await fetch('/api/verify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ pin: userPin }),
+        body: JSON.stringify({ pin }),
       });
 
       const data = await response.json();
@@ -67,201 +67,161 @@ export default function VerifierDashboard() {
         setError(data.error || 'Verification failed');
       }
     } catch (error) {
-      setError('An error occurred');
+      setError('An error occurred during verification');
     } finally {
-      setIsLoading(false); // Stop loading
+      setIsLoading(false);
     }
   };
 
-  const handleConfirmVerification = async () => {
-    setIsConfirming(true); // Start loading for confirm button
-    setError('');
-
-    try {
-      const response = await fetch('/api/confirm-verification', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ pin: userPin }),
-      });
-
-      if (response.ok) {
-        setVerificationResult((prev) => ({ ...prev, isVerified: true }));
-      } else {
-        setError('Failed to confirm verification');
-      }
-    } catch (error) {
-      setError('An error occurred');
-    } finally {
-      setIsConfirming(false); // Stop loading for confirm button
+  const startScanning = () => {
+    if (!videoRef.current) {
+      setError('Camera not ready. Please try again.');
+      return;
     }
+  
+    setIsScanning(true);
+    setError('');
+    setVerificationResult(null);
+  
+    qrScannerRef.current = new QrScanner(
+      videoRef.current,
+      (result) => {
+        stopScanning();
+        handleVerify(result.data);
+      },
+      { returnDetailedScanResult: true }
+    );
+  
+    qrScannerRef.current
+      .start()
+      .then(() => console.log('QR scanner started'))
+      .catch((err) => {
+        setError('Error starting camera. Please check permissions and try again.');
+        setIsScanning(false);
+      });
+  };
+  
+  const stopScanning = () => {
+    if (qrScannerRef.current) {
+      qrScannerRef.current.stop();
+      qrScannerRef.current.destroy();
+      qrScannerRef.current = null;
+    }
+    setIsScanning(false);
   };
 
   const handleVerifyAnother = () => {
-    setUserPin('');
     setVerificationResult(null);
     setError('');
+    startScanning();
   };
 
-  // Function to fetch all users
-  const fetchAllUsers = async () => {
-    setIsFetchingUsers(true);
-    setError('');
-    try {
-      const response = await fetch('/api/registrations');
-      if (!response.ok) {
-        throw new Error('Failed to fetch users');
-      }
-      const data = await response.json();
-      setUsers(data.users);
-      setIsModalOpen(true); // Open modal after fetching users
-    } catch (err) {
-      setError('An error occurred while fetching users.');
-    } finally {
-      setIsFetchingUsers(false);
-    }
-  };
-
-  // Filter users based on search roll number
-  const filteredUsers = users.filter((user) =>
-    user.rollNo.toLowerCase().includes(searchRollNo.toLowerCase())
-  );
+  if (!isVerifierAuthenticated) {
+    return (
+      <VerifierLogin
+        onLogin={handleVerifierAuthentication}
+        isLoading={isLoading}
+        error={error}
+      />
+    );
+  }
 
   return (
-    <div className="min-h-screen flex items-center justify-center">
+    <div className="min-h-screen flex items-center justify-center bg-gray-100">
       <div className="bg-white p-8 rounded-lg shadow-md w-96">
-      <Image src="/logo.png" alt="FMC Logo" width={100} height={100} className="mx-auto" />
+        <Image src="/logo.png" alt="FMC Logo" width={100} height={100} className="mx-auto mb-6" />
         <h1 className="text-2xl font-bold mb-6 text-center">Verifier Dashboard</h1>
-        {!isVerifierAuthenticated ? (
-          <form onSubmit={handleEntrySubmit} className="space-y-4">
-            <div>
-              <label htmlFor="entryPin" className="block text-sm font-medium text-gray-700">
-                Enter Verifier PIN
-              </label>
-              <input
-                type="password"
-                id="entryPin"
-                value={entryPin}
-                onChange={(e) => setEntryPin(e.target.value)}
-                required
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-              />
+        
+        {!isScanning && !verificationResult && !isLoading && (
+          <button
+            onClick={startScanning}
+            className="w-full flex justify-center items-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          >
+            <Camera className="mr-2" /> Scan QR Code
+          </button>
+        )}
+
+        {isScanning && (
+          <div className="mt-4">
+            <video ref={videoRef} className="w-full rounded-md" />
+            <button
+              onClick={stopScanning}
+              className="mt-2 w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+            >
+              Stop Scanning
+            </button>
+          </div>
+        )}
+
+        {isLoading && (
+          <div className="flex justify-center items-center">
+            <Spinner />
+            <span className="ml-2">Verifying...</span>
+          </div>
+        )}
+
+        {error && <p className="mt-4 text-red-600 text-center">{error}</p>}
+
+        {verificationResult && (
+          <div className="mt-4 p-4 bg-green-100 rounded-md">
+            <h2 className="text-lg font-semibold mb-2">Verification Result:</h2>
+            <p>Name: {verificationResult.firstName} {verificationResult.lastName}</p>
+            <p>Roll No: {verificationResult.rollNo}</p>
+            <p>Branch: {verificationResult.branch}</p>
+            <p>Year of Admission: {verificationResult.yearOfAdmission}</p>
+            <div className="flex items-center mt-2">
+              <CheckCircle className="w-5 h-5 mr-1 text-green-600" />
+              <span className="text-green-600 font-semibold">Verified</span>
             </div>
             <button
-              type="submit"
-              className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              onClick={handleVerifyAnother}
+              className="mt-4 w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
             >
-              {isLoading ? <Spinner /> : 'Enter Verifier Dashboard'}
+              Verify Another
             </button>
-          </form>
-        ) : (
-          <>
-            <form onSubmit={handleVerify} className="space-y-4">
-              <div>
-                <label htmlFor="userPin" className="block text-sm font-medium text-gray-700">
-                  Enter 8-digit Numeric User PIN
-                </label>
-                <input
-                  type="number"
-                  id="userPin"
-                  value={userPin}
-                  onChange={(e) => setUserPin(e.target.value)}
-                  required
-                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                />
-              </div>
-              <button
-                type="submit"
-                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-              >
-                {isLoading ? <Spinner /> : 'Verify'}
-              </button>
-            </form>
-            {error && <p className="mt-4 text-red-600 text-center">{error}</p>}
-            {verificationResult && (
-              <div className="mt-4 p-4 bg-green-100 rounded-md">
-                <h2 className="text-lg font-semibold mb-2">Verification Result:</h2>
-                <p>Name: {verificationResult.firstName} {verificationResult.lastName}</p>
-                <p>Roll No: {verificationResult.rollNo}</p>
-                <p>Branch: {verificationResult.branch}</p>
-                <p>Year of Admission: {verificationResult.yearOfAdmission}</p>
-                <div className="flex items-center mt-2">
-                  <p className="mr-2">Verified:</p>
-                  {verificationResult.isVerified ? (
-                    <div className="flex items-center text-green-600">
-                      <CheckCircle className="w-5 h-5 mr-1" />
-                      <span>Verified</span>
-                    </div>
-                  ) : (
-                    <span>No</span>
-                  )}
-                </div>
-                {!verificationResult.isVerified && (
-                  <button
-                    onClick={handleConfirmVerification}
-                    className="mt-4 w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
-                  >
-                    {isConfirming ? <Spinner /> : 'Confirm Verification'}
-                  </button>
-                )}
-                <button
-                  onClick={handleVerifyAnother}
-                  className="mt-4 w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                >
-                  Verify Another
-                </button>
-              </div>
-            )}
-            <button
-              onClick={fetchAllUsers}
-              className="mt-6 w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-            >
-              {isFetchingUsers ? <Spinner /> : 'Get All Registered Users'}
-            </button>
-
-            {/* Modal for Showing Users */}
-            {isModalOpen && (
-              <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-75 z-50">
-                <div className="bg-white w-4/5 max-w-3xl p-6 rounded-lg shadow-lg relative">
-                  {/* Close Button */}
-                  <button
-                    onClick={() => setIsModalOpen(false)}
-                    className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
-                  >
-                    <X size={24} />
-                  </button>
-
-                  <h2 className="text-xl font-bold mb-4 text-center">Registered Users :{users.length}</h2>
-
-                  {/* Search Field */}
-                  <div className="mb-4">
-                    <input
-                      type="text"
-                      value={searchRollNo}
-                      onChange={(e) => setSearchRollNo(e.target.value)}
-                      placeholder="Search by Roll No."
-                      className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                    />
-                  </div>
-
-                  {/* User List with Scroll */}
-                  <div className="h-64 overflow-y-scroll border rounded-md p-2">
-                    {filteredUsers.length > 0 ? (
-                      filteredUsers.map((user, index) => (
-                        <div key={index} className="p-2 border-b last:border-b-0">
-                          <p>{index + 1}. {user.firstName} {user.lastName}</p>
-                          <p>Roll No: {user.rollNo}</p>
-                          <p>Branch: {user.branch}</p>
-                        </div>
-                      ))
-                    ) : (
-                      <p className="text-center">No users found.</p>
-                    )}
-                  </div>
-                </div>
-              </div>
-            )}
-          </>
+          </div>
         )}
+      </div>
+    </div>
+  );
+}
+
+function VerifierLogin({ onLogin, isLoading, error }) {
+  const [entryPin, setEntryPin] = useState('');
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    onLogin(entryPin);
+  };
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-100">
+      <div className="bg-white p-8 rounded-lg shadow-md w-96">
+        <Image src="/logo.png" alt="FMC Logo" width={100} height={100} className="mx-auto mb-6" />
+        <h1 className="text-2xl font-bold mb-6 text-center">Verifier Login</h1>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label htmlFor="entryPin" className="block text-sm font-medium text-gray-700">
+              Enter Verifier PIN
+            </label>
+            <input
+              type="password"
+              id="entryPin"
+              value={entryPin}
+              onChange={(e) => setEntryPin(e.target.value)}
+              required
+              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+            />
+          </div>
+          <button
+            type="submit"
+            className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            disabled={isLoading}
+          >
+            {isLoading ? <Spinner /> : 'Login'}
+          </button>
+        </form>
+        {error && <p className="mt-4 text-red-600 text-center">{error}</p>}
       </div>
     </div>
   );

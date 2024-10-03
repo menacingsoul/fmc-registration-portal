@@ -51,7 +51,7 @@ const sendVerificationEmail = async (email: string, pin: string) => {
   const mailOptions = {
     from: process.env.EMAIL_USER,
     to: email,
-    subject: 'Your PIN for Garba Night Celebration',
+    subject: 'Your QR Code for Garba Night Celebration',
     html: `
       <!DOCTYPE html>
       <html lang="en">
@@ -64,7 +64,7 @@ const sendVerificationEmail = async (email: string, pin: string) => {
               .container { background-color: #ffffff; border-radius: 8px; padding: 20px; max-width: 600px; margin: auto; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); }
               .header { text-align: center; margin-bottom: 20px; }
               .header img { max-width: 100%; height: auto; border-radius: 8px; }
-              .otp { text-align: center; font-size: 32px; font-weight: bold; color: #FF6B6B; padding: 15px; background-color: #FFF0F0; border-radius: 8px; display: inline-block; letter-spacing: 3px; }
+              .qr { text-align: center; margin: 20px 0; }
               .footer { text-align: center; color: #888; font-size: 12px; margin-top: 30px; }
               h1 { color: #FF6B6B; }
               p { line-height: 1.6; }
@@ -78,10 +78,12 @@ const sendVerificationEmail = async (email: string, pin: string) => {
                   <h1>Garba Night Verification</h1>
               </div>
               <p>Dear ${email},</p>
-              <p>Get ready to dance the night away! Here's your special PIN for the Garba Night Celebration:</p>
-              <div class="otp">${pin}</div>
-              <p>Please show this PIN at the venue entrance for quick and easy verification.</p>
-              <p class="warning">Note: This PIN is unique to you and for one-time use only. Please do not share it with anyone.</p>
+              <p>Get ready to dance the night away! Here's your unique QR Code for the Garba Night Celebration:</p>
+              <div class="qr">
+                  <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${pin}" alt="QR Code for Garba Night" />
+              </div>
+              <p>Please show this QR code at the venue entrance for quick and easy verification.</p>
+              <p class="warning">Note: This QR code is unique to you and for one-time use only. Please do not share it with anyone.</p>
               <p>We can't wait to see you there! Prepare for an unforgettable night of music, dance, and festive spirit!</p>
               <div class="footer"><p>Film and Media Council</p></div>
           </div>
@@ -89,6 +91,7 @@ const sendVerificationEmail = async (email: string, pin: string) => {
       </html>
     `,
   };
+  
 
   return transporter.sendMail(mailOptions);
 };
