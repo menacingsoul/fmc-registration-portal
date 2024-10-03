@@ -1,4 +1,5 @@
 'use client';
+
 import { useEffect, useState, useRef } from 'react';
 import QrScanner from 'qr-scanner';
 import { CheckCircle, X, Camera } from 'lucide-react';
@@ -22,20 +23,22 @@ export default function VerifierDashboard() {
   const [searchRollNo, setSearchRollNo] = useState('');
   const [isScanning, setIsScanning] = useState(false);
   const videoRef = useRef(null);
+  const scannerRef = useRef(null);
 
   const initializeQrScanner = async () => {
     if (videoRef.current) {
       try {
-        const scanner = new QrScanner(
+        scannerRef.current = new QrScanner(
           videoRef.current,
           (result) => {
             setUserPin(result.data);
             setIsScanning(false);
-            scanner.stop(); // Stop the scanner after a successful scan
+            scannerRef.current.stop();
+            handleVerify(result.data);
           },
           { returnDetailedScanResult: true }
         );
-        await scanner.start();
+        await scannerRef.current.start();
         setIsScanning(true);
       } catch (error) {
         console.error('Failed to initialize QR scanner:', error);
@@ -45,13 +48,8 @@ export default function VerifierDashboard() {
   };
 
   const stopScanning = () => {
-    if (videoRef.current) {
-      const stream = videoRef.current.srcObject;
-      if (stream) {
-        const tracks = stream.getTracks();
-        tracks.forEach((track) => track.stop());
-        videoRef.current.srcObject = null;
-      }
+    if (scannerRef.current) {
+      scannerRef.current.stop();
     }
     setIsScanning(false);
   };
@@ -81,8 +79,7 @@ export default function VerifierDashboard() {
     }
   };
 
-  const handleVerify = async (e) => {
-    e.preventDefault();
+  const handleVerify = async (pin) => {
     setError('');
     setVerificationResult(null);
     setIsLoading(true);
@@ -91,7 +88,7 @@ export default function VerifierDashboard() {
       const response = await fetch('/api/verify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ pin: userPin }),
+        body: JSON.stringify({ pin }),
       });
 
       const data = await response.json();
@@ -135,6 +132,7 @@ export default function VerifierDashboard() {
     setUserPin('');
     setVerificationResult(null);
     setError('');
+    initializeQrScanner();
   };
 
   const fetchAllUsers = async () => {
@@ -158,6 +156,12 @@ export default function VerifierDashboard() {
   const filteredUsers = users.filter((user) =>
     user.rollNo.toLowerCase().includes(searchRollNo.toLowerCase())
   );
+
+  useEffect(() => {
+    if (isVerifierAuthenticated && !isScanning && !verificationResult) {
+      initializeQrScanner();
+    }
+  }, [isVerifierAuthenticated, isScanning, verificationResult]);
 
   return (
     <div className="min-h-screen flex items-center justify-center">
@@ -188,28 +192,6 @@ export default function VerifierDashboard() {
           </form>
         ) : (
           <>
-            <form onSubmit={handleVerify} className="space-y-4">
-              <div>
-                <label htmlFor="userPin" className="block text-sm font-medium text-gray-700">
-                  User PIN (scanned from QR code)
-                </label>
-                <input
-                  type="number"
-                  id="userPin"
-                  value={userPin}
-                  onChange={(e) => setUserPin(e.target.value)}
-                  required
-                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                />
-              </div>
-              <button
-                type="submit"
-                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-              >
-                {isLoading ? <Spinner /> : 'Verify'}
-              </button>
-            </form>
-
             <div className="mt-4">
               <h2 className="text-lg font-semibold mb-2">Scan QR Code:</h2>
               <div className="relative">
@@ -279,47 +261,47 @@ export default function VerifierDashboard() {
             >
               {isFetchingUsers ? <Spinner /> : 'Get All Registered Users'}
             </button>
-
-            {isModalOpen && (
-              <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-75 z-50">
-                <div className="bg-white w-4/5 max-w-3xl p-6 rounded-lg shadow-lg relative">
-                  <button
-                    onClick={() => setIsModalOpen(false)}
-                    className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
-                  >
-                    <X size={24} />
-                  </button>
-                  <h2 className="text-xl font-bold mb-4 text-center">
-                    Registered Users: {users.length}
-                  </h2>
-                  <div className="mb-4">
-                    <input
-                      type="text"
-                      value={searchRollNo}
-                      onChange={(e) => setSearchRollNo(e.target.value)}
-                      placeholder="Search by Roll No."
-                      className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                    />
-                  </div>
-                  <div className="h-64 overflow-y-scroll border rounded-md p-2">
-                    {filteredUsers.length > 0 ? (
-                      filteredUsers.map((user, index) => (
-                        <div key={index} className="p-2 border-b last:border-b-0">
-                          <p>{index + 1}. {user.firstName} {user.lastName}</p>
-                          <p>Roll No: {user.rollNo}</p>
-                          <p>Branch: {user.branch}</p>
-                        </div>
-                      ))
-                    ) : (
-                      <p className="text-center">No users found.</p>
-                    )}
-                  </div>
-                </div>
-              </div>
-            )}
           </>
         )}
       </div>
+
+      {isModalOpen && (
+        <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-75 z-50">
+          <div className="bg-white w-4/5 max-w-3xl p-6 rounded-lg shadow-lg relative">
+            <button
+              onClick={() => setIsModalOpen(false)}
+              className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
+            >
+              <X size={24} />
+            </button>
+            <h2 className="text-xl font-bold mb-4 text-center">
+              Registered Users: {users.length}
+            </h2>
+            <div className="mb-4">
+              <input
+                type="text"
+                value={searchRollNo}
+                onChange={(e) => setSearchRollNo(e.target.value)}
+                placeholder="Search by Roll No."
+                className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+              />
+            </div>
+            <div className="h-64 overflow-y-scroll border rounded-md p-2">
+              {filteredUsers.length > 0 ? (
+                filteredUsers.map((user, index) => (
+                  <div key={index} className="p-2 border-b last:border-b-0">
+                    <p>{index + 1}. {user.firstName} {user.lastName}</p>
+                    <p>Roll No: {user.rollNo}</p>
+                    <p>Branch: {user.branch}</p>
+                  </div>
+                ))
+              ) : (
+                <p className="text-center">No users found.</p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
