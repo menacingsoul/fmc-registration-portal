@@ -28,7 +28,7 @@ const parseIITBHUEmail = (email: string): ParsedEmail => {
 
   // Determine branch and year based on the nameParts length
   if (nameParts.length === 4) {
-    branch = nameParts[3].slice(0, -2); // cd is the branch, e.g., cdcse23 => "cse"
+    branch = nameParts[3].slice(0, -2); //  e.g., cd.cse23 => "cse"
     year = '20' + nameParts[3].slice(-2); // Extract year as "23" => "2023"
   } else if (nameParts.length === 3) {
     branch = nameParts[2].slice(0, -2); // Last component is branch, e.g., cse23 => "cse"

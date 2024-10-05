@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from 'react';
 import QrScanner from 'qr-scanner';
 import { CheckCircle, X, Camera } from 'lucide-react';
 import Image from 'next/image';
+import * as XLSX from 'xlsx';
 
 const Spinner = () => (
   <div className="w-5 h-5 border-4 border-blue-400 border-solid border-t-transparent rounded-full animate-spin"></div>
@@ -24,6 +25,7 @@ export default function VerifierDashboard() {
   const [isScanning, setIsScanning] = useState(false);
   const videoRef = useRef(null);
   const scannerRef = useRef(null);
+
 
   const initializeQrScanner = async () => {
     if (videoRef.current) {
@@ -163,6 +165,24 @@ export default function VerifierDashboard() {
     }
   }, [isVerifierAuthenticated, isScanning, verificationResult]);
 
+  const handleExportToExcel = () => {
+    if (users.length === 0) {
+      alert('No users to export.');
+      return;
+    }
+
+    const formattedData = users.map((user) => ({
+      'Roll No': user.rollNo,
+      'Name': user.firstName +" "+ user.lastName,
+      'Branch': user.branch,
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(formattedData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Registered Users');
+    XLSX.writeFile(workbook, 'registered_users.xlsx');
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center">
       <div className="bg-white p-8 rounded-lg shadow-md w-96">
@@ -268,6 +288,12 @@ export default function VerifierDashboard() {
       {isModalOpen && (
         <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-75 z-50">
           <div className="bg-white w-4/5 max-w-3xl p-6 rounded-lg shadow-lg relative">
+          <button
+              onClick={handleExportToExcel}
+              className="mt-2 w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700"
+            >
+              Export to Excel
+            </button>
             <button
               onClick={() => setIsModalOpen(false)}
               className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
