@@ -23,7 +23,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Only @itbhu.ac.in email addresses are allowed' }, { status: 403 });
     }
 
-    // At this point, the token is valid and the email is from the correct domain
+   
     return NextResponse.json({ email });
   } catch (error) {
     console.error('Error verifying Google token:', error);

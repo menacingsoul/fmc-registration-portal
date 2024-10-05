@@ -4,16 +4,17 @@ import User from '../../../models/User';
 
 export async function GET() {
   try {
-    
+    // Establish a database connection
     await connectToDatabase();
 
-    
-    const users = await User.find({}, 'firstName lastName rollNo email branch');
+    // Fetch all users with all their data
+    const users = await User.find();
 
     if (!users || users.length === 0) {
       return NextResponse.json({ error: 'No registrations yet' }, { status: 400 });
     }
-    
+
+    // Return all users
     return NextResponse.json({ users });
   } catch (error) {
     console.error('Retrieval error:', error);
