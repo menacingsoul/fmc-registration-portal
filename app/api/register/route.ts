@@ -58,6 +58,14 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'User already registered' }, { status: 400 });
     }
 
+    const userCount = await User.countDocuments();
+    if (userCount >= 975) {
+      return NextResponse.json(
+        { error: "Event Full. No more registrations are allowed." },
+        { status: 400 }
+      );
+    }
+
     // Generate unique 8-digit PIN
     const pin = Math.floor(10000000 + Math.random() * 90000000).toString();
 
