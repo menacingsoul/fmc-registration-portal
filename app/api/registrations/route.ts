@@ -8,7 +8,7 @@ export async function GET() {
     await connectToDatabase();
 
     
-    const users = await User.find({}, 'firstName lastName rollNo branch');
+    const users = await User.find({}, 'firstName lastName rollNo email branch');
 
     if (!users || users.length === 0) {
       return NextResponse.json({ error: 'No registrations yet' }, { status: 400 });

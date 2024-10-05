@@ -174,7 +174,9 @@ export default function VerifierDashboard() {
     const formattedData = users.map((user) => ({
       'Roll No': user.rollNo,
       'Name': user.firstName +" "+ user.lastName,
+      'Email': user.email,
       'Branch': user.branch,
+
     }));
 
     const worksheet = XLSX.utils.json_to_sheet(formattedData);
@@ -318,6 +320,7 @@ export default function VerifierDashboard() {
                   <div key={index} className="p-2 border-b last:border-b-0">
                     <p>{index + 1}. {user.firstName} {user.lastName}</p>
                     <p>Roll No: {user.rollNo}</p>
+                    <p>Email : {user.email}</p>
                     <p>Branch: {user.branch}</p>
                   </div>
                 ))
