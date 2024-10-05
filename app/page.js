@@ -1,8 +1,9 @@
 'use client'
-import React, { useState, useEffect } from 'react';
+import React, { useState} from 'react';
 import Image from 'next/image';
 import { Loader } from 'lucide-react';
 import { GoogleLogin } from '@react-oauth/google';
+import { useRouter } from 'next/navigation';
 
 export default function Home() {
   const [step, setStep] = useState(1);
@@ -12,6 +13,7 @@ export default function Home() {
   const [pin, setPin] = useState('');
   const [loading, setLoading] = useState(false);
   const [qrCodeUrl, setQrCodeUrl] = useState('');
+  const router = useRouter();
 
   const handleGoogleLogin = async (credentialResponse) => {
     setError('');
@@ -42,6 +44,10 @@ export default function Home() {
       setLoading(false);
     }
   };
+  const handleRetrieveClick = async () => {
+    router.push('/retrieve');
+  }
+  
 
   // Handle final registration with Roll Number
   const handleRegister = async (e) => {
@@ -87,7 +93,8 @@ export default function Home() {
 
         {/* Step 1: Google Login */}
         {step === 1 && (
-          <div className="space-y-4">
+          <>
+          <div className="space-y-4 text-center">
             <p className="text-sm text-gray-600 text-center mb-4">
               Please sign in with your @itbhu.ac.in Google account to proceed.
             </p>
@@ -96,6 +103,16 @@ export default function Home() {
               onError={() => setError('Login Failed')}
             />
           </div>
+          <p className=' text-center mt-2'>
+            OR
+          </p>
+          <div>
+            <button className=' bg-slate-500 text-white p-2 w-full rounded-md mt-4'
+              onClick={handleRetrieveClick}>
+              Retrieve Your QR Code
+            </button>
+          </div>
+          </>
         )}
 
         {/* Step 2: Registration with Roll Number */}
