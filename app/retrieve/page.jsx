@@ -35,7 +35,14 @@ export default function RetrieveQRCode() {
   };
 
   if (loading) {
-    return <div className="min-h-screen flex items-center justify-center animate-spin"><Loader size={28}/></div>
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-100">
+        <div className="flex items-center space-x-4 animate-pulse">
+          <Loader size={64} className="text-blue-600 animate-spin" />
+          <span className="text-2xl font-bold text-gray-700">Loading...</span>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -55,16 +62,27 @@ export default function RetrieveQRCode() {
             />
           </div>
         )}
+       
 
         {qrCode && (
-          <div className="mt-4 p-4 bg-green-100 rounded-md">
-            <div className="flex justify-center mt-4">
-            <img src={qrCode} alt="QR Code" width="200" height="200" />
+          <div className="ticket bg-gradient-to-r from-purple-200 via-white to-yellow-200 border border-dashed border-gray-400 p-4 rounded-lg mt-8 shadow-lg">
+          <div className="flex justify-between items-center mb-4">
+            <div>
+              <h2 className="text-xl font-bold">🎟️ Event Pass</h2>
+              <p className="text-lg font-medium text-gray-700">{process.env.NEXT_PUBLIC_EVENT_NAME}</p>
             </div>
-            <p className="text-sm text-green-700 text-center mt-2">
-              This is your QR code for verification at the Venue
-            </p>
+            <Image src="/logo.png" alt="Event Logo" width={50} height={50} />
           </div>
+          <div className="text-sm font-medium text-gray-700 mb-4">
+            <p>Time: <span className="text-gray-800 font-semibold">{process.env.NEXT_PUBLIC_EVENT_TIME}</span></p>
+            <p>Date: <span className="text-gray-800 font-semibold">{process.env.NEXT_PUBLIC_EVENT_DATE}</span></p>
+            <p>Venue: <span className="text-gray-800 font-semibold">{process.env.NEXT_PUBLIC_EVENT_VENUE}</span></p>
+          </div>
+          <div className="flex justify-center">
+            <img src={qrCode} alt="QR Code" className=" w-44 h-44" />
+          </div>
+          <p className="text-red-600 font-bold text-center mt-4">KINDLY SCREENSHOT THIS QR CODE AND SHOW IT AT THE VENUE</p>
+        </div>
         )}
 
         {error && <p className="mt-4 text-red-600 text-center">{error}</p>}

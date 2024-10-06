@@ -59,7 +59,7 @@ export async function POST(req: Request) {
     }
 
     const userCount = await User.countDocuments();
-    if (userCount >= 1030) {
+    if (userCount >=  2000) {
       return NextResponse.json(
         { error: "Event Full. No more registrations are allowed." },
         { status: 400 }
