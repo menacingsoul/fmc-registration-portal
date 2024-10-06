@@ -5,6 +5,7 @@ import QrScanner from 'qr-scanner';
 import { CheckCircle, X, Camera } from 'lucide-react';
 import Image from 'next/image';
 import * as XLSX from 'xlsx';
+import { set } from 'mongoose';
 
 const Spinner = () => (
   <div className="w-5 h-5 border-4 border-blue-400 border-solid border-t-transparent rounded-full animate-spin"></div>
@@ -19,6 +20,8 @@ export default function VerifierDashboard() {
   const [isLoading, setIsLoading] = useState(false);
   const [isConfirming, setIsConfirming] = useState(false);
   const [users, setUsers] = useState([]);
+  const [count, setCount] = useState(0);
+  const [isCounting, setIsCounting] = useState(false);
   const [isFetchingUsers, setIsFetchingUsers] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchRollNo, setSearchRollNo] = useState('');
@@ -154,6 +157,24 @@ export default function VerifierDashboard() {
       setIsFetchingUsers(false);
     }
   };
+  
+  const fetchVerifiedCount = async () => {
+    setIsCounting(true);
+    setError('');
+    try {
+      const response = await fetch('/api/get-verified-count');
+      if (!response.ok) {
+        throw new Error('Failed to fetch verified users count');
+      }
+      const data = await response.json();
+      setCount(data.verifiedCount);
+      console.log(count);
+    } catch (err) {
+      setError('An error occurred while getting count.');
+    } finally {
+      setIsCounting(false);
+    }
+  }
 
   const filteredUsers = users.filter((user) =>
     user.rollNo.toLowerCase().includes(searchRollNo.toLowerCase())
@@ -283,6 +304,15 @@ export default function VerifierDashboard() {
             >
               {isFetchingUsers ? <Spinner /> : 'Get All Registered Users'}
             </button>
+            <button
+              onClick={fetchVerifiedCount}
+              className="mt-6 w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+            >
+              {isCounting ? <Spinner /> : 'Count Verified Users'}
+            </button>
+            {count >=0 && (
+              <p className="mt-4 text-center text-black text-sm">Verified Users: {count}</p>
+            )}
           </>
         )}
       </div>

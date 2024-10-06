@@ -160,7 +160,7 @@ export default function Home() {
           <div className="mt-4 p-4 bg-green-100 rounded-md">
             <p className="text-green-800 text-center font-bold">Email: {email}</p>
             <div className="flex justify-center mt-4">
-              <Image src={qrCodeUrl} alt="QR Code" width={200} height={200} />
+              <img src={qrCodeUrl} alt="QR Code" width="200" height="200" />
             </div>
             <p className="text-lg text-red-500 font-bold text-center mt-2">
           KINDLY SCREENSHOT THIS QR CODE AND SHOW IT AT THE VENUE
