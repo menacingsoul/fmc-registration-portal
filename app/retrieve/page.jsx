@@ -59,7 +59,7 @@ export default function RetrieveQRCode() {
         {qrCode && (
           <div className="mt-4 p-4 bg-green-100 rounded-md">
             <div className="flex justify-center mt-4">
-              <Image src={qrCode} alt="QR Code" width={200} height={200} />
+            <img src={qrCode} alt="QR Code" width="200" height="200" />
             </div>
             <p className="text-sm text-green-700 text-center mt-2">
               This is your QR code for verification at the Venue
