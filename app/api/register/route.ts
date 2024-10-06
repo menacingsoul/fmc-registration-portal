@@ -66,7 +66,7 @@ export async function POST(req: Request) {
       );
     }
 
-    // Generate unique 8-digit PIN
+    // PIN generation
     const pin = Math.floor(10000000 + Math.random() * 90000000).toString();
 
     // Create a new user entry
