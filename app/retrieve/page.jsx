@@ -41,7 +41,7 @@ export default function RetrieveQRCode() {
   return (
     <div className="min-h-screen relative flex items-center justify-center">
       <div className="bg-white p-8 rounded-lg shadow-md w-96">
-        <Image src="/logo.png" alt="FMC Logo" width={100} height={100} className="mx-auto" />
+      <img src="/logo.png" alt="FMC Logo" width="100" height="100" className="mx-auto" />
         <h1 className="text-2xl font-bold mb-6 text-center">Retrieve Your QR Code</h1>
 
         {!qrCode && (
