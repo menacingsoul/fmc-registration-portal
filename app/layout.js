@@ -1,6 +1,5 @@
 import localFont from "next/font/local";
 import "./globals.css";
-import MatrixBackground from "./components/background/MatrixBackground";
 import { GoogleOAuthProvider } from '@react-oauth/google';
 
 const geistSans = localFont({
@@ -25,8 +24,7 @@ export default function RootLayout({ children }) {
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <GoogleOAuthProvider clientId={process.env.GOOGLE_CLIENT_ID}>
-        <MatrixBackground/>
+        <GoogleOAuthProvider clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID}>
         {children}
         </GoogleOAuthProvider>
       </body>

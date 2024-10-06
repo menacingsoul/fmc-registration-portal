@@ -1,5 +1,5 @@
 'use client'
-import React, { useState} from 'react';
+import React, { useState } from 'react';
 import Image from 'next/image';
 import { Loader } from 'lucide-react';
 import { GoogleLogin } from '@react-oauth/google';
@@ -44,12 +44,11 @@ export default function Home() {
       setLoading(false);
     }
   };
+
   const handleRetrieveClick = async () => {
     router.push('/retrieve');
-  }
-  
+  };
 
-  // Handle final registration with Roll Number
   const handleRegister = async (e) => {
     e.preventDefault();
     setError('');
@@ -68,7 +67,6 @@ export default function Home() {
 
       if (response.ok) {
         setPin(data.pin);
-        // Generate QR code
         const qrApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${data.pin}`;
         setQrCodeUrl(qrApiUrl);
       } else {
@@ -82,40 +80,38 @@ export default function Home() {
   };
 
   if (loading) {
-    return <div className="min-h-screen flex items-center justify-center animate-spin"><Loader size={28}/></div>
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-100">
+        <div className="flex items-center space-x-4 animate-pulse">
+          <Loader size={64} className="text-blue-600 animate-spin" />
+          <span className="text-2xl font-bold text-gray-700">Loading...</span>
+        </div>
+      </div>
+    );
   }
-
   return (
-    <div className="min-h-screen relative flex items-center justify-center">
+    <div className="min-h-screen relative flex items-center justify-center bg-gradient-to-r from-blue-200 via-white to-green-200">
       <div className="bg-white p-8 rounded-lg shadow-md w-96">
         <Image src="/logo.png" alt="FMC Logo" width={100} height={100} className="mx-auto" />
-        <h1 className="text-2xl font-bold mb-6 text-center">Garba Night Registration</h1>
-
-        {/* Step 1: Google Login */}
+        <h1 className="text-2xl font-bold mb-6 text-center">{process.env.NEXT_PUBLIC_EVENT_NAME} Registration</h1>
+        
         {step === 1 && (
           <>
-          <div className="space-y-4 text-center">
-            <p className="text-sm text-gray-600 text-center mb-4">
-              Please sign in with your @itbhu.ac.in Google account to proceed.
-            </p>
-            <GoogleLogin
-              onSuccess={handleGoogleLogin}
-              onError={() => setError('Login Failed')}
-            />
-          </div>
-          <p className=' text-center mt-2'>
-            OR
-          </p>
-          <div>
-            <button className=' bg-slate-500 text-white p-2 w-full rounded-md mt-4'
-              onClick={handleRetrieveClick}>
-              Retrieve Your QR Code
-            </button>
-          </div>
+            <div className="space-y-4 text-center">
+              <p className="text-sm text-gray-600 text-center mb-4">
+                Please sign in with your @itbhu.ac.in Google account to proceed.
+              </p>
+              <GoogleLogin onSuccess={handleGoogleLogin} onError={() => setError('Login Failed')} />
+            </div>
+            <p className="text-center mt-2">OR</p>
+            <div>
+              <button className="bg-slate-500 text-white p-2 w-full rounded-md mt-4" onClick={handleRetrieveClick}>
+                Retrieve Your QR Code
+              </button>
+            </div>
           </>
         )}
 
-        {/* Step 2: Registration with Roll Number */}
         {step === 2 && !qrCodeUrl && (
           <form onSubmit={handleRegister} className="space-y-4">
             <div>
@@ -152,20 +148,26 @@ export default function Home() {
           </form>
         )}
 
-        {/* Display Error Message */}
         {error && <p className="mt-4 text-red-600 text-center">{error}</p>}
 
-        {/* Display QR Code after Registration */}
         {qrCodeUrl && (
-          <div className="mt-4 p-4 bg-green-100 rounded-md">
-            <p className="text-green-800 text-center font-bold">Email: {email}</p>
-            <div className="flex justify-center mt-4">
-              <img src={qrCodeUrl} alt="QR Code" width="200" height="200" />
+          <div className="ticket bg-gradient-to-r from-purple-200 via-white to-yellow-200 border border-dashed border-gray-400 p-4 rounded-lg mt-8 shadow-lg">
+            <div className="flex justify-between items-center mb-4">
+              <div>
+                <h2 className="text-xl font-bold">🎟️ Event Pass</h2>
+                <p className="text-lg font-medium text-gray-700">{process.env.NEXT_PUBLIC_EVENT_NAME}</p>
+              </div>
+              <Image src="/logo.png" alt="Event Logo" width={50} height={50} />
             </div>
-            <p className="text-lg text-red-500 font-bold text-center mt-2">
-          KINDLY SCREENSHOT THIS QR CODE AND SHOW IT AT THE VENUE
-            </p>
-           
+            <div className="text-sm font-medium text-gray-700 mb-4">
+              <p>Time: <span className="text-gray-800 font-semibold">{process.env.NEXT_PUBLIC_EVENT_TIME}</span></p>
+              <p>Date: <span className="text-gray-800 font-semibold">{process.env.NEXT_PUBLIC_EVENT_DATE}</span></p>
+              <p>Venue: <span className="text-gray-800 font-semibold">{process.env.NEXT_PUBLIC_EVENT_VENUE}</span></p>
+            </div>
+            <div className="flex justify-center">
+              <img src={qrCodeUrl} alt="QR Code" className=" w-44 h-44" />
+            </div>
+            <p className="text-red-600 font-bold text-center mt-4">KINDLY SCREENSHOT THIS QR CODE AND SHOW IT AT THE VENUE</p>
           </div>
         )}
       </div>
